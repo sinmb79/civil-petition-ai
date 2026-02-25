@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-test"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Petition {
+  id              String   @id @default(uuid())
+  raw_text        String
+  processing_type String
+  budget_related  Boolean
+  discretionary   Boolean
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("petitions")
+}

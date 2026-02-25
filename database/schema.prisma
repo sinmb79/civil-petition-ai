@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Petition {
+  id              String   @id @default(uuid()) @db.Uuid
+  raw_text        String
+  processing_type String
+  budget_related  Boolean
+  discretionary   Boolean
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("petitions")
+}
