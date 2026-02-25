@@ -17,3 +17,57 @@ Ensures test independence
 Minimizes the impact of audit logic modifications
 
 Replaceable legal APIs
+2️⃣ Integrations are an "external dependency isolation area."
+
+External APIs are only called here.
+
+Example:
+
+integrations/law-api/client.ts
+
+Do not fetch directly from the engine.
+→ Inject via interface.
+
+This allows mocking in tests.
+
+3️⃣ The docs folder is the reference document for Codex.
+
+Codex reads the entire repo.
+
+Therefore:
+
+SPEC.md
+
+DATA_MODEL.md
+
+TASKS.md
+
+AGENTS.md
+
+These four must exist in the root or docs folder.
+
+4️⃣ The database is clearly separated.
+
+Schema file
+
+Migration history
+
+Seed data
+
+Include laws/audit samples in the seed folder. (No hardcoding of operational data)
+
+5️⃣ Test Structure
+tests/unit/legal-engine.test.ts
+tests/unit/audit-engine.test.ts
+tests/integration/full-flow.test.ts
+
+Audit risks must be included in unit tests.
+
+🔒 Structure for Future Expansion
+
+If expanding to a multi-agency SaaS in the future:
+
+packages/tenant-manager/
+packages/role-permission/
+
+Additional details are possible.
