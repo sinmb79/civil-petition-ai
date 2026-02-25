@@ -1,0 +1,25 @@
+{
+  "name": "civil-petition-ai",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "npm run --workspaces --if-present build",
+    "dev": "npm --workspace @civil/web run dev",
+    "lint": "npm run --workspaces --if-present lint",
+    "test": "npm run --workspaces --if-present test"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "eslint": "^9.21.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "integrations/*",
+    "database",
+    "tests"
+  ]
+}

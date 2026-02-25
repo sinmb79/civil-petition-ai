@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Petition {
+  id         String   @id @default(cuid())
+  content    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model LegalSource {
+  id             String   @id @default(cuid())
+  law_name       String
+  article_number String
+  effective_date DateTime
+  source_link    String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
+model Citation {
+  id             String   @id @default(cuid())
+  law_name       String
+  article_number String
+  effective_date DateTime
+  source_link    String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+
+model DraftReply {
+  id         String   @id @default(cuid())
+  petitionId String
+  content    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model AuditFinding {
+  id         String   @id @default(cuid())
+  petitionId String
+  level      String
+  finding    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
