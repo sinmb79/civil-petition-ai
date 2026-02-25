@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AuditCorpusDocument {
+  id            String      @id @default(cuid())
+  title         String
+  sourceOrg     String      @map("source_org")
+  publishedDate DateTime?   @map("published_date")
+  rawText       String      @map("raw_text")
+  tags          Json
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  auditCases    AuditCase[]
+
+  @@map("audit_corpus_documents")
+}
+
+model AuditCase {
+  id         String               @id @default(cuid())
+  documentId String               @map("document_id")
+  document   AuditCorpusDocument  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  title      String
+  reference  String
+  date       DateTime?
+  summary    String
+  tags       Json
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  @@map("audit_cases")
+}
