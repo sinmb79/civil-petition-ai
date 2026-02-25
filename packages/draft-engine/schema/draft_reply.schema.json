@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civil-petition-ai.local/schemas/draft_reply.schema.json",
+  "title": "DraftReply",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petition_summary",
+    "fact_analysis",
+    "legal_review",
+    "decision",
+    "action_plan",
+    "legal_basis",
+    "audit_risk"
+  ],
+  "properties": {
+    "petition_summary": { "type": "string" },
+    "fact_analysis": { "type": "string" },
+    "legal_review": { "type": "string" },
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVE", "PARTIAL_APPROVE", "REJECT", "REQUEST_INFO"]
+    },
+    "action_plan": { "type": "string" },
+    "legal_basis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["law_name", "article_number", "effective_date", "source_link"],
+        "properties": {
+          "law_name": { "type": "string" },
+          "article_number": { "type": "string" },
+          "effective_date": { "type": "string" },
+          "source_link": { "type": "string" }
+        }
+      }
+    },
+    "audit_risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "findings", "recommendations"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["LOW", "MODERATE", "HIGH"]
+        },
+        "findings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
