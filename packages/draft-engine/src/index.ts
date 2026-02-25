@@ -34,7 +34,7 @@ export type DraftReply = {
 };
 
 export class DraftEngine {
-  constructor(private readonly openAIClient: OpenAIClient = createOpenAIClientFromEnv()) {}
+  constructor(private readonly openAIClient?: OpenAIClient) {}
 
   async generateDraft(input: DraftInput): Promise<DraftReply> {
     if (!input.legal_sources || input.legal_sources.length === 0) {
@@ -50,7 +50,8 @@ export class DraftEngine {
     ].join(' ');
     const userPrompt = JSON.stringify(input);
 
-    const reply = await this.openAIClient.createStructuredOutput<DraftReply>({
+    const client = this.openAIClient ?? createOpenAIClientFromEnv();
+    const reply = await client.createStructuredOutput<DraftReply>({
       systemPrompt,
       userPrompt,
       schemaName: 'draft_reply',

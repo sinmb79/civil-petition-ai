@@ -77,6 +77,24 @@ describe('Petition routes integration', () => {
     expect(response.body.processing_type).toBe('URGENT');
   });
 
+  it('POST /api/petitions/:id/generate-draft returns structured draft payload', async () => {
+    const response = await request(app).post(`/api/petitions/${createdId}/generate-draft`).send({});
+
+    expect(response.status).toBe(200);
+    expect(response.body.petition_id).toBe(createdId);
+    expect(response.body.decision).toBe('REQUEST_INFO');
+    expect(response.body.legal_review).toContain('Insufficient Legal Basis');
+    expect(response.body).toHaveProperty('petition_summary');
+    expect(response.body).toHaveProperty('fact_analysis');
+    expect(response.body).toHaveProperty('action_plan');
+    expect(response.body).toHaveProperty('legal_basis');
+    expect(Array.isArray(response.body.legal_basis)).toBe(true);
+    expect(response.body).toHaveProperty('audit_risk');
+    expect(response.body.audit_risk).toHaveProperty('level');
+    expect(response.body.audit_risk).toHaveProperty('findings');
+    expect(response.body.audit_risk).toHaveProperty('recommendations');
+  });
+
   it('DELETE /api/petitions/:id deletes petition', async () => {
     const response = await request(app).delete(`/api/petitions/${createdId}`);
     expect(response.status).toBe(204);
