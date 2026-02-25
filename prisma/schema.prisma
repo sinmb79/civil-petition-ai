@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Decision {
+  ACCEPT
+  PARTIAL
+  REJECT
+  TRANSFER
+  REQUEST_INFO
+}
+
+enum RiskLevel {
+  LOW
+  MODERATE
+  HIGH
+}
+
+model Petition {
+  id              String      @id @default(uuid())
+  rawText         String      @map("raw_text")
+  processingType  String      @map("processing_type")
+  budgetRelated   Boolean     @default(false) @map("budget_related")
+  discretionary   Boolean     @default(false)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  draftReplies    DraftReply[]
+  auditFindings   AuditFinding[]
+
+  @@map("petitions")
+}
+
+model DraftReply {
+  id              String      @id @default(uuid())
+  petitionId      String      @map("petition_id")
+  petitionSummary String      @map("petition_summary")
+  factAnalysis    String      @map("fact_analysis")
+  legalReview     String      @map("legal_review")
+  decision        Decision
+  actionPlan      String      @map("action_plan")
+  auditRiskLevel  RiskLevel   @map("audit_risk_level")
+  scoreTotal      Int         @default(0) @map("score_total")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  petition        Petition    @relation(fields: [petitionId], references: [id])
+  auditFindings   AuditFinding[]
+
+  @@map("draft_replies")
+}
+
+model AuditFinding {
+  id              String      @id @default(uuid())
+  petitionId      String      @map("petition_id")
+  draftReplyId    String?     @map("draft_reply_id")
+  riskType        String      @map("risk_type")
+  description     String
+  recommendation  String
+  severity        RiskLevel
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  petition        Petition    @relation(fields: [petitionId], references: [id])
+  draftReply      DraftReply? @relation(fields: [draftReplyId], references: [id])
+
+  @@map("audit_findings")
+}
