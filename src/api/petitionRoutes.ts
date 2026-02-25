@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { PetitionService } from '../petition/petitionService';
 import { DraftEngine, LegalSource } from '../../packages/draft-engine/src';
 import { AuditRiskEngine } from '../engines/auditRiskEngine';
+import { applyValidationWithRepair } from '../../packages/core/validators';
 
 export function createPetitionRouter(service: PetitionService): Router {
   const router = Router();
@@ -73,15 +74,30 @@ export function createPetitionRouter(service: PetitionService): Router {
       return res.status(404).json({ message: 'Petition not found' });
     }
 
-    const legalSources = collectLegalSources(petition.id);
+    const legalSources = collectLegalSources(petition.id, req.body?.legal_sources as unknown);
 
     try {
-      const draft = await draftEngine.generateDraft({
+      const draftResult = await draftEngine.generateDraft({
         petition_summary: petition.raw_text,
         facts: `processing_type=${petition.processing_type}, budget_related=${petition.budget_related}, discretionary=${petition.discretionary}`,
         legal_sources: legalSources,
         request_id: petition.id
       });
+      const validated = applyValidationWithRepair(draftResult, legalSources, petition.raw_text);
+
+      if (validated.validation.status === 'WARN') {
+        console.warn('Draft validator WARN', {
+          petition_id: petition.id,
+          issues: validated.validation.issues
+        });
+      }
+
+      if (validated.repaired && validated.validation.status === 'FAIL') {
+        console.warn('Draft validator FAIL after repair; fallback to REQUEST_INFO', {
+          petition_id: petition.id,
+          issues: validated.validation.issues
+        });
+      }
 
       const detectedRisks = buildDetectedRisks(petition);
       const audit = auditRiskEngine.evaluate({
@@ -91,12 +107,12 @@ export function createPetitionRouter(service: PetitionService): Router {
 
       return res.status(200).json({
         petition_id: petition.id,
-        ...draft,
+        ...validated.output,
         audit_risk: {
           level: audit.level,
           findings: audit.explain.map((item) => item.reason),
           recommendations:
-            draft.decision === 'REQUEST_INFO'
+            validated.output.decision === 'REQUEST_INFO'
               ? ['Collect legal sources and supporting documents, then re-run draft generation.']
               : ['Proceed with documented review and approval workflow.']
         }
@@ -112,9 +128,27 @@ export function createPetitionRouter(service: PetitionService): Router {
   return router;
 }
 
-function collectLegalSources(_petitionId: string): LegalSource[] {
+function collectLegalSources(_petitionId: string, input: unknown): LegalSource[] {
+  if (Array.isArray(input)) {
+    return input.filter(isLegalSource);
+  }
+
   // Placeholder for legal retrieval integration. Empty list triggers REQUEST_INFO fallback.
   return [];
+}
+
+function isLegalSource(value: unknown): value is LegalSource {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const source = value as LegalSource;
+  return (
+    typeof source.law_name === 'string' &&
+    typeof source.article_number === 'string' &&
+    typeof source.effective_date === 'string' &&
+    typeof source.source_link === 'string'
+  );
 }
 
 function buildDetectedRisks(petition: {
