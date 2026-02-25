@@ -1,0 +1,15 @@
+{
+  "id": "S04",
+  "petition": {
+    "raw_text": "절차 생략 상태로 인허가 요청이 접수되었습니다.",
+    "processing_type": "GENERAL",
+    "budget_related": false,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["PARTIAL_APPROVE"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "MODERATE",
+    "rules_expected": ["R2_PROCEDURAL_OMISSION", "R6_REPEATED_AUDIT_FINDINGS"]
+  }
+}

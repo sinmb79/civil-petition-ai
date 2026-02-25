@@ -1,0 +1,15 @@
+{
+  "id": "S01",
+  "petition": {
+    "raw_text": "민원 신청 건에 대해 일반 절차로 처리 요청합니다.",
+    "processing_type": "GENERAL",
+    "budget_related": false,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["APPROVE"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "LOW",
+    "rules_expected": []
+  }
+}

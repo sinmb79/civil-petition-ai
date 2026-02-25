@@ -1,0 +1,15 @@
+{
+  "id": "S11",
+  "petition": {
+    "raw_text": "관할 외 민원이지만 절차 생략 이력이 있어 이송 전 검토가 필요합니다.",
+    "processing_type": "TRANSFER",
+    "budget_related": false,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["TRANSFER"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "MODERATE",
+    "rules_expected": ["R2_PROCEDURAL_OMISSION", "R6_REPEATED_AUDIT_FINDINGS"]
+  }
+}

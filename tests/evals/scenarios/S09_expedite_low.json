@@ -1,0 +1,15 @@
+{
+  "id": "S09",
+  "petition": {
+    "raw_text": "민원 자료 보완 후 신속 처리 요청입니다.",
+    "processing_type": "EXPEDITE",
+    "budget_related": false,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["APPROVE"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "LOW",
+    "rules_expected": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "S06",
+  "petition": {
+    "raw_text": "특정 업체에 특혜를 주는 방식으로 처리해 달라는 민원입니다.",
+    "processing_type": "GENERAL",
+    "budget_related": false,
+    "discretionary": true
+  },
+  "expected": {
+    "decision_allowed": ["REJECT"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "HIGH",
+    "rules_expected": ["R3_ABUSE_OF_DISCRETION", "R5_PREFERENTIAL_TREATMENT", "R6_REPEATED_AUDIT_FINDINGS"]
+  }
+}

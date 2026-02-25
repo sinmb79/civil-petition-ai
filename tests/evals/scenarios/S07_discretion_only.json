@@ -1,0 +1,15 @@
+{
+  "id": "S07",
+  "petition": {
+    "raw_text": "재량 판단이 필요한 일반 민원 처리 요청입니다.",
+    "processing_type": "GENERAL",
+    "budget_related": false,
+    "discretionary": true
+  },
+  "expected": {
+    "decision_allowed": ["PARTIAL_APPROVE"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "MODERATE",
+    "rules_expected": ["R3_ABUSE_OF_DISCRETION"]
+  }
+}
