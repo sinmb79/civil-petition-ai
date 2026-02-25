@@ -1,0 +1,18 @@
+:root { font-family: Arial, sans-serif; }
+body { margin: 0; background: #f7f7f8; color: #1f2937; }
+main { max-width: 920px; margin: 0 auto; padding: 24px; }
+a { color: #0f4db8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+label { display: block; font-weight: 600; margin-bottom: 8px; }
+input, textarea, select, button { font: inherit; }
+textarea, input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+button { padding: 8px 12px; border: none; border-radius: 6px; background: #1d4ed8; color: white; cursor: pointer; }
+button[disabled] { opacity: .6; cursor: not-allowed; }
+.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.tabs { display: flex; gap: 8px; margin-top: 12px; margin-bottom: 12px; }
+.tab { background: #e5e7eb; color: #111827; }
+.tab.active { background: #1d4ed8; color: white; }
+.section-title { margin: 0 0 6px; font-size: 14px; color: #4b5563; }
+.section-body { margin: 0 0 12px; white-space: pre-wrap; }

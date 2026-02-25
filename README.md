@@ -296,3 +296,25 @@ Risk Levels:
 * 🗂 개발 로드맵(6개월·12개월 버전)
 
 어느 방향으로 확장할지 지정하면 그 버전으로 정리하겠다.
+
+---
+
+## UI Quick Start (Minimal Web Flows)
+
+### Requirements
+- Node.js 20+
+- pnpm 9+
+
+### Run
+1. Install dependencies:
+   - `pnpm install`
+2. Start web app:
+   - `pnpm dev`
+3. Open:
+   - `http://localhost:3000/petitions/new` (create petition)
+   - `http://localhost:3000/petitions` (list)
+   - `http://localhost:3000/petitions/{id}` (detail + generate draft)
+
+### Quality checks
+- Tests: `pnpm test`
+- Production build: `pnpm build`
