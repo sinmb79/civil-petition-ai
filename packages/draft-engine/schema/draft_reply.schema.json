@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DraftReply",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "petition_summary",
+    "fact_analysis",
+    "legal_review",
+    "decision",
+    "action_plan",
+    "legal_basis",
+    "audit_risk"
+  ],
+  "properties": {
+    "petition_summary": { "type": "string" },
+    "fact_analysis": { "type": "string" },
+    "legal_review": { "type": "string" },
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVE", "REJECT", "REQUEST_INFO", "TRANSFER"]
+    },
+    "action_plan": { "type": "string" },
+    "legal_basis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "article", "effective_date", "source_url"],
+        "properties": {
+          "title": { "type": "string" },
+          "article": { "type": "string" },
+          "effective_date": { "type": "string" },
+          "source_url": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "audit_risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "findings", "recommendations"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["LOW", "MODERATE", "HIGH"]
+        },
+        "findings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
