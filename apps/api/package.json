@@ -1,0 +1,10 @@
+{
+  "name": "@civil/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Standalone API not initialized (using Next.js API routes in apps/web)'",
+    "lint": "echo 'No lint target yet for apps/api'",
+    "test": "vitest run --passWithNoTests"
+  }
+}

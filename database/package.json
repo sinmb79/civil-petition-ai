@@ -1,0 +1,16 @@
+{
+  "name": "@civil/database",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "prisma validate",
+    "lint": "echo 'No lint target for prisma schema'",
+    "test": "vitest run --passWithNoTests",
+    "migrate:dev": "prisma migrate dev",
+    "seed": "tsx seed/index.ts"
+  },
+  "devDependencies": {
+    "prisma": "^6.4.1",
+    "tsx": "^4.19.3"
+  }
+}
