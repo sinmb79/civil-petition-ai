@@ -51,3 +51,22 @@ Data Model Definition
   "recommendation": "string",
   "severity": "LOW | MODERATE | HIGH"
 }
+6. TenantRiskProfile
+{
+  "id": "UUID",
+  "tenant_id": "string",
+  "risk_type": "string",
+  "base_weight": "number",
+  "escalation_factor": "number",
+  "updated_at": "datetime"
+}
+7. AuditFindingAggregate
+{
+  "id": "UUID",
+  "tenant_id": "string",
+  "risk_type": "string",
+  "count": "number",
+  "last_detected_at": "datetime",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
