@@ -13,6 +13,11 @@ type OpenAIResponse = {
       text?: string;
     }>;
   }>;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_tokens?: number;
+  };
 };
 
 export type StructuredOutputRequest = {
@@ -37,6 +42,7 @@ export class OpenAIClient {
       strict: true
     };
 
+    const maxOutputTokens = resolveMaxOutputTokens();
     const response = await fetch(`${this.baseUrl}/responses`, {
       method: 'POST',
       headers: {
@@ -45,6 +51,7 @@ export class OpenAIClient {
       },
       body: JSON.stringify({
         model: request.model ?? process.env.OPENAI_MODEL ?? 'gpt-4.1-mini',
+        max_output_tokens: maxOutputTokens,
         input: [
           {
             role: 'system',
@@ -64,6 +71,11 @@ export class OpenAIClient {
     }
 
     const payload = (await response.json()) as OpenAIResponse;
+    logStructured('openai.responses.usage', {
+      model: request.model ?? process.env.OPENAI_MODEL ?? 'gpt-4.1-mini',
+      max_output_tokens: maxOutputTokens,
+      usage: payload.usage ?? null
+    });
     const text = this.extractText(payload);
     return JSON.parse(text) as T;
   }
@@ -84,6 +96,25 @@ export class OpenAIClient {
 
     return chunks.join('\n');
   }
+}
+
+function resolveMaxOutputTokens(): number {
+  const raw = Number(process.env.OPENAI_MAX_TOKENS ?? 800);
+  if (!Number.isFinite(raw) || raw <= 0) {
+    return 800;
+  }
+
+  return Math.min(Math.floor(raw), 1000);
+}
+
+function logStructured(event: string, payload: Record<string, unknown>): void {
+  console.info(
+    JSON.stringify({
+      event,
+      timestamp: new Date().toISOString(),
+      ...payload
+    })
+  );
 }
 
 export function createOpenAIClientFromEnv(): OpenAIClient {

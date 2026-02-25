@@ -1,14 +1,18 @@
 import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PetitionService } from '../petition/petitionService';
-import { DraftEngine, LegalSource } from '../../packages/draft-engine/src';
-import { AuditRiskEngine } from '../engines/auditRiskEngine';
-import { applyValidationWithRepair } from '../../packages/core/validators';
+import { LegalSource } from '../../packages/draft-engine/src';
+import { GenerationJobRepository } from '../repository/generationJobRepository';
+import { jsonError } from '../http/response';
+import { checkBetaGate } from '../http/betaGate';
+import { generateDraftPayloadFromPetition } from '../services/draftGenerationService';
+import { incGenerateRequests, incJobsCreated } from '../observability/metrics';
 
-export function createPetitionRouter(service: PetitionService): Router {
+export function createPetitionRouter(
+  service: PetitionService,
+  options?: { generationJobs?: GenerationJobRepository }
+): Router {
   const router = Router();
-  const draftEngine = new DraftEngine();
-  const auditRiskEngine = new AuditRiskEngine();
 
   router.post('/', async (req, res) => {
     try {
@@ -16,9 +20,9 @@ export function createPetitionRouter(service: PetitionService): Router {
       res.status(201).json(created);
     } catch (error) {
       if (error instanceof ZodError) {
-        return res.status(400).json({ message: 'Validation failed', issues: error.issues });
+        return jsonError(res, req, 400, 'Validation failed');
       }
-      return res.status(500).json({ message: 'Internal server error' });
+      return jsonError(res, req, 500, 'Internal server error');
     }
   });
 
@@ -31,16 +35,16 @@ export function createPetitionRouter(service: PetitionService): Router {
       res.json(data);
     } catch (error) {
       if (error instanceof ZodError) {
-        return res.status(400).json({ message: 'Validation failed', issues: error.issues });
+        return jsonError(res, req, 400, 'Validation failed');
       }
-      return res.status(500).json({ message: 'Internal server error' });
+      return jsonError(res, req, 500, 'Internal server error');
     }
   });
 
   router.get('/:id', async (req, res) => {
     const petition = await service.getById(req.params.id);
     if (!petition) {
-      return res.status(404).json({ message: 'Petition not found' });
+      return jsonError(res, req, 404, 'Petition not found');
     }
     return res.json(petition);
   });
@@ -49,86 +53,84 @@ export function createPetitionRouter(service: PetitionService): Router {
     try {
       const petition = await service.update(req.params.id, req.body);
       if (!petition) {
-        return res.status(404).json({ message: 'Petition not found' });
+        return jsonError(res, req, 404, 'Petition not found');
       }
       return res.json(petition);
     } catch (error) {
       if (error instanceof ZodError) {
-        return res.status(400).json({ message: 'Validation failed', issues: error.issues });
+        return jsonError(res, req, 400, 'Validation failed');
       }
-      return res.status(500).json({ message: 'Internal server error' });
+      return jsonError(res, req, 500, 'Internal server error');
     }
   });
 
   router.delete('/:id', async (req, res) => {
     const deleted = await service.delete(req.params.id);
     if (!deleted) {
-      return res.status(404).json({ message: 'Petition not found' });
+      return jsonError(res, req, 404, 'Petition not found');
     }
     return res.status(204).send();
   });
 
   router.post('/:id/generate-draft', async (req, res) => {
+    const beta = checkBetaGate();
+    if (beta.blocked) {
+      return jsonError(res, req, 503, beta.message);
+    }
+    incGenerateRequests();
+
     const petition = await service.getById(req.params.id);
     if (!petition) {
-      return res.status(404).json({ message: 'Petition not found' });
+      return jsonError(res, req, 404, 'Petition not found');
     }
 
-    const legalSources = collectLegalSources(petition.id, req.body?.legal_sources as unknown);
+    const mode = (process.env.GENERATION_MODE ?? 'async').toLowerCase();
+    if (mode === 'async') {
+      if (!options?.generationJobs) {
+        return jsonError(res, req, 500, 'Generation job repository is not configured');
+      }
+
+      const maskedInputJson = JSON.stringify({
+        petition_id: petition.id,
+        raw_text: maskPii(petition.raw_text),
+        processing_type: petition.processing_type,
+        budget_related: petition.budget_related,
+        discretionary: petition.discretionary
+      });
+      const ttlHours = resolveTtlHours();
+      const job = await options.generationJobs.createQueued(maskedInputJson, ttlHours);
+      incJobsCreated();
+      return res.status(202).json({
+        message: 'Deprecated sync endpoint. Job queued for async generation.',
+        job_id: job.id,
+        status: job.status
+      });
+    }
+
+    const legalSources = collectLegalSources(req.body?.legal_sources as unknown);
 
     try {
-      const draftResult = await draftEngine.generateDraft({
-        petition_summary: petition.raw_text,
-        facts: `processing_type=${petition.processing_type}, budget_related=${petition.budget_related}, discretionary=${petition.discretionary}`,
-        legal_sources: legalSources,
-        request_id: petition.id
-      });
-      const validated = applyValidationWithRepair(draftResult, legalSources, petition.raw_text);
-
-      if (validated.validation.status === 'WARN') {
-        console.warn('Draft validator WARN', {
-          petition_id: petition.id,
-          issues: validated.validation.issues
-        });
-      }
-
-      if (validated.repaired && validated.validation.status === 'FAIL') {
-        console.warn('Draft validator FAIL after repair; fallback to REQUEST_INFO', {
-          petition_id: petition.id,
-          issues: validated.validation.issues
-        });
-      }
-
-      const detectedRisks = buildDetectedRisks(petition);
-      const audit = auditRiskEngine.evaluate({
-        tenant_id: 'default-tenant',
-        detected_risks: detectedRisks
-      });
-
-      return res.status(200).json({
+      const payload = await generateDraftPayloadFromPetition({
         petition_id: petition.id,
-        ...validated.output,
-        audit_risk: {
-          level: audit.level,
-          findings: audit.explain.map((item) => item.reason),
-          recommendations:
-            validated.output.decision === 'REQUEST_INFO'
-              ? ['Collect legal sources and supporting documents, then re-run draft generation.']
-              : ['Proceed with documented review and approval workflow.']
-        }
+        raw_text: petition.raw_text,
+        processing_type: petition.processing_type,
+        budget_related: petition.budget_related,
+        discretionary: petition.discretionary,
+        legal_sources: legalSources
       });
+      return res.status(200).json(payload);
     } catch (error) {
       if (error instanceof ZodError) {
-        return res.status(400).json({ message: 'Validation failed', issues: error.issues });
+        return jsonError(res, req, 400, 'Validation failed');
       }
-      return res.status(500).json({ message: 'Draft generation failed' });
+      return jsonError(res, req, 500, 'Draft generation failed');
     }
   });
 
   return router;
 }
 
-function collectLegalSources(_petitionId: string, input: unknown): LegalSource[] {
+function collectLegalSources(input: unknown): LegalSource[] {
   if (Array.isArray(input)) {
     return input.filter(isLegalSource);
   }
@@ -151,27 +153,22 @@ function isLegalSource(value: unknown): value is LegalSource {
   );
 }
 
-function buildDetectedRisks(petition: {
-  budget_related: boolean;
-  discretionary: boolean;
-}): Array<{ rule_id: string; risk_type: string; base_score: number }> {
-  const risks: Array<{ rule_id: string; risk_type: string; base_score: number }> = [];
+const RESIDENT_ID_REGEX = /\b\d{6}-?[1-4]\d{6}\b/g;
+const PHONE_REGEX = /\b(?:01[0-9]|02|0[3-9][0-9])-?\d{3,4}-?\d{4}\b/g;
+const EMAIL_REGEX = /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}\b/g;
 
-  if (petition.budget_related) {
-    risks.push({
-      rule_id: 'RULE_BUDGET_001',
-      risk_type: 'BUDGET_MISUSE',
-      base_score: 3
-    });
+function maskPii(value: string): string {
+  return value
+    .replace(RESIDENT_ID_REGEX, '[REDACTED_RESIDENT_ID]')
+    .replace(PHONE_REGEX, '[REDACTED_PHONE]')
+    .replace(EMAIL_REGEX, '[REDACTED_EMAIL]');
+}
+
+function resolveTtlHours(): number {
+  const ttlHours = Number(process.env.DRAFT_TTL_HOURS ?? 24);
+  if (!Number.isFinite(ttlHours) || ttlHours <= 0) {
+    return 24;
   }
 
-  if (petition.discretionary) {
-    risks.push({
-      rule_id: 'RULE_DISC_001',
-      risk_type: 'ABUSE_OF_DISCRETION',
-      base_score: 2
-    });
-  }
-
-  return risks;
+  return Math.floor(ttlHours);
 }

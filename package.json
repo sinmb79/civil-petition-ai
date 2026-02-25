@@ -15,7 +15,9 @@
     "prisma:migrate": "prisma migrate deploy --schema=database/schema.prisma",
     "prisma:seed": "tsx database/seed.ts",
     "db:push:test": "prisma db push --schema=database/schema.test.prisma",
-    "prisma:generate:test": "prisma generate --schema=database/schema.test.prisma"
+    "prisma:generate:test": "prisma generate --schema=database/schema.test.prisma",
+    "cleanup:jobs": "tsx scripts/cleanup.ts",
+    "worker:start": "tsx scripts/worker.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

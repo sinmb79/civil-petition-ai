@@ -19,3 +19,18 @@ model Petition {
 
   @@map("petitions")
 }
+
+model GenerationJob {
+  id                String              @id @default(uuid())
+  status            String
+  input_masked_json String
+  result_json       String?
+  error             String?
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  expires_at        DateTime?
+
+  @@index([status, created_at])
+  @@index([expires_at])
+  @@map("generation_jobs")
+}

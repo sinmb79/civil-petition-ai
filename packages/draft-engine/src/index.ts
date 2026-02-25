@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { createHash } from 'crypto';
 import { OpenAIClient, createOpenAIClientFromEnv } from '../../../integrations/openai/client';
 
 export type LegalSource = {
@@ -41,6 +42,18 @@ export class DraftEngine {
       return buildInsufficientLegalBasisReply(input.petition_summary);
     }
 
+    const serializedInput = JSON.stringify(input);
+    const maxInputChars = resolveMaxInputChars();
+    if (serializedInput.length > maxInputChars) {
+      return buildInputTooLongFallback(input.petition_summary, serializedInput.length, maxInputChars);
+    }
+
+    const cacheKey = createInputHash(serializedInput);
+    const cached = getCachedReply(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const schema = loadDraftReplySchema();
     const systemPrompt = [
       'You generate deterministic administrative draft replies.',
@@ -48,7 +61,7 @@ export class DraftEngine {
       'Return JSON only and satisfy the provided schema exactly.',
       'If legal basis is insufficient, set decision to REQUEST_INFO.'
     ].join(' ');
-    const userPrompt = JSON.stringify(input);
+    const userPrompt = serializedInput;
 
     const client = this.openAIClient ?? createOpenAIClientFromEnv();
     const reply = await client.createStructuredOutput<DraftReply>({
@@ -61,6 +74,8 @@ export class DraftEngine {
     if (!isDraftReply(reply)) {
       throw new Error('Structured output did not match DraftReply shape.');
     }
+
+    setCachedReply(cacheKey, reply);
 
     return reply;
   }
@@ -92,6 +107,72 @@ export function loadDraftReplySchema(): Record<string, unknown> {
   );
   const raw = fs.readFileSync(schemaPath, 'utf8');
   return JSON.parse(raw) as Record<string, unknown>;
+}
+
+type CacheEntry = {
+  reply: DraftReply;
+  expiresAt: number;
+};
+
+const OPENAI_RESULT_CACHE = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 10 * 60 * 1000;
+
+export function __resetDraftEngineCacheForTests(): void {
+  OPENAI_RESULT_CACHE.clear();
+}
+
+function createInputHash(serializedInput: string): string {
+  return createHash('sha256').update(serializedInput).digest('hex');
+}
+
+function getCachedReply(hash: string): DraftReply | null {
+  const entry = OPENAI_RESULT_CACHE.get(hash);
+  if (!entry) {
+    return null;
+  }
+
+  if (Date.now() >= entry.expiresAt) {
+    OPENAI_RESULT_CACHE.delete(hash);
+    return null;
+  }
+
+  return entry.reply;
+}
+
+function setCachedReply(hash: string, reply: DraftReply): void {
+  OPENAI_RESULT_CACHE.set(hash, {
+    reply,
+    expiresAt: Date.now() + CACHE_TTL_MS
+  });
+}
+
+function resolveMaxInputChars(): number {
+  const raw = Number(process.env.MAX_INPUT_CHARS ?? 8000);
+  if (!Number.isFinite(raw) || raw <= 0) {
+    return 8000;
+  }
+
+  return Math.floor(raw);
+}
+
+function buildInputTooLongFallback(
+  petitionSummary: string,
+  inputLength: number,
+  maxInputChars: number
+): DraftReply {
+  return {
+    petition_summary: petitionSummary,
+    fact_analysis: 'Input payload is too large for safe model invocation.',
+    legal_review: `Insufficient Legal Basis: input length ${inputLength} exceeds MAX_INPUT_CHARS ${maxInputChars}.`,
+    decision: 'REQUEST_INFO',
+    action_plan: 'Reduce request payload size and resubmit with focused facts and legal sources.',
+    legal_basis: [],
+    audit_risk: {
+      level: 'MODERATE',
+      findings: ['Payload size guardrail triggered before model call.'],
+      recommendations: ['Trim long narrative fields and retry draft generation.']
+    }
+  };
 }
 
 export function isDraftReply(value: unknown): value is DraftReply {

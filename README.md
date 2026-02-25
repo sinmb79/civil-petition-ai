@@ -60,6 +60,41 @@ pnpm prisma:seed
 pnpm dev
 ```
 
+## Runtime env (beta + async jobs)
+
+- `GENERATION_MODE=async|sync` (default: `async`)
+- `BETA_MODE=true|false` (default: `false`)
+- `BETA_END_DATE=ISO-8601` (example: `2026-12-31T23:59:59Z`)
+- `WORKER_TOKEN=<secret token>`
+- `DRAFT_TTL_HOURS=24`
+
+When `BETA_MODE=true` and current time is after `BETA_END_DATE`, `/api/generate` and `/api/petitions/:id/generate-draft` return `503`.
+
+## Async draft flow
+
+1. Create job:
+   - `POST /api/generate` with `{ "petition_id": "<id>" }`
+2. Poll result:
+   - `GET /api/jobs/:job_id`
+3. Worker claims/completes:
+   - `POST /api/worker/claim`
+   - `POST /api/worker/complete`
+
+## Worker execution
+
+```bash
+WORKER_TOKEN=dev-worker-token WORKER_API_BASE_URL=http://127.0.0.1:3000 pnpm worker:start
+```
+
+This script is OpenClaw-compatible in interface and can be replaced by platform-managed workers later.
+Detailed integration runbook: `OPENCLAW_PLAYBOOK.md`.
+
+## Cleanup expired jobs
+
+```bash
+pnpm cleanup:jobs
+```
+
 ## Testing
 
 ```bash

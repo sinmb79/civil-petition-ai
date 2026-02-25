@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { createApp } from '../../src/app';
 import { PetitionService } from '../../src/petition/petitionService';
+import { GenerationJobRepository } from '../../src/repository/generationJobRepository';
 import { PrismaPetitionRepository } from '../../src/repository/prismaPetitionRepository';
 
 const dbFile = path.join(process.cwd(), `.tmp-test-${randomUUID()}.db`);
@@ -14,13 +15,19 @@ let app: ReturnType<typeof createApp>;
 
 describe('Petition routes integration', () => {
   let createdId: string;
+  const workerToken = 'test-worker-token';
 
   beforeAll(async () => {
     const databaseUrl = `file:${dbFile}`;
     process.env.DATABASE_URL = databaseUrl;
+    process.env.GENERATION_MODE = 'async';
+    process.env.WORKER_TOKEN = workerToken;
     const commandEnv = { ...process.env, DATABASE_URL: databaseUrl };
 
-    execSync('pnpm prisma:generate:test', { stdio: 'inherit', env: commandEnv });
+    const prismaTestClientPath = path.join(process.cwd(), 'src', 'generated', 'prisma-test', 'index.js');
+    if (!fs.existsSync(prismaTestClientPath)) {
+      execSync('pnpm prisma:generate:test', { stdio: 'inherit', env: commandEnv });
+    }
     execSync('pnpm db:push:test', { stdio: 'inherit', env: commandEnv });
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -28,7 +35,8 @@ describe('Petition routes integration', () => {
     prisma = new PrismaClient();
 
     const service = new PetitionService(new PrismaPetitionRepository(prisma));
-    app = createApp(service);
+    const generationJobs = new GenerationJobRepository(prisma);
+    app = createApp(service, { generationJobs, prisma });
   });
 
   afterAll(async () => {
@@ -77,22 +85,89 @@ describe('Petition routes integration', () => {
     expect(response.body.processing_type).toBe('URGENT');
   });
 
+  it('GET /health returns health details', async () => {
+    const response = await request(app).get('/health');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('ok');
+    expect(response.body).toHaveProperty('db');
+    expect(response.body).toHaveProperty('prisma');
+    expect(response.body).toHaveProperty('worker_token_configured');
+  });
+
   it('POST /api/petitions/:id/generate-draft returns structured draft payload', async () => {
     const response = await request(app).post(`/api/petitions/${createdId}/generate-draft`).send({});
 
-    expect(response.status).toBe(200);
-    expect(response.body.petition_id).toBe(createdId);
-    expect(response.body.decision).toBe('REQUEST_INFO');
-    expect(response.body.legal_review).toContain('Insufficient Legal Basis');
-    expect(response.body).toHaveProperty('petition_summary');
-    expect(response.body).toHaveProperty('fact_analysis');
-    expect(response.body).toHaveProperty('action_plan');
-    expect(response.body).toHaveProperty('legal_basis');
-    expect(Array.isArray(response.body.legal_basis)).toBe(true);
-    expect(response.body).toHaveProperty('audit_risk');
-    expect(response.body.audit_risk).toHaveProperty('level');
-    expect(response.body.audit_risk).toHaveProperty('findings');
-    expect(response.body.audit_risk).toHaveProperty('recommendations');
+    expect(response.status).toBe(202);
+    expect(response.body).toHaveProperty('job_id');
+    expect(response.body.status).toBe('QUEUED');
+  });
+
+  it('supports async job flow: create -> claim -> complete -> get', async () => {
+    const generated = await request(app).post('/api/generate').send({ petition_id: createdId });
+    expect(generated.status).toBe(202);
+    expect(generated.body).toHaveProperty('job_id');
+
+    let claim: request.Response | null = null;
+    for (let i = 0; i < 5; i += 1) {
+      const claimed = await request(app)
+        .post('/api/worker/claim')
+        .set('X-WORKER-TOKEN', workerToken)
+        .send({});
+      if (claimed.status === 204) {
+        break;
+      }
+      expect(claimed.status).toBe(200);
+      expect(claimed.body.status).toBe('RUNNING');
+      if (claimed.body.id === generated.body.job_id) {
+        claim = claimed;
+        break;
+      }
+
+      await request(app)
+        .post('/api/worker/complete')
+        .set('X-WORKER-TOKEN', workerToken)
+        .send({ job_id: claimed.body.id, result_json: '{"drained":true}' });
+    }
+
+    expect(claim).not.toBeNull();
+
+    const resultPayload = JSON.stringify({ decision: 'REQUEST_INFO', note: 'done' });
+    const completed = await request(app)
+      .post('/api/worker/complete')
+      .set('X-WORKER-TOKEN', workerToken)
+      .send({ job_id: generated.body.job_id, result_json: resultPayload });
+    expect(completed.status).toBe(200);
+    expect(completed.body.status).toBe('DONE');
+
+    const fetched = await request(app).get(`/api/jobs/${generated.body.job_id}`);
+    expect(fetched.status).toBe(200);
+    expect(fetched.body.status).toBe('DONE');
+    expect(fetched.body.result_json).toBe(resultPayload);
+  });
+
+  it('returns 503 when beta period is ended', async () => {
+    process.env.BETA_MODE = 'true';
+    process.env.BETA_END_DATE = '2000-01-01T00:00:00.000Z';
+
+    const response = await request(app).post('/api/generate').send({ petition_id: createdId });
+    expect(response.status).toBe(503);
+    expect(response.body).toHaveProperty('error_id');
+    expect(response.body).toHaveProperty('request_id');
+    expect(response.body.message).toContain('Beta period ended');
+
+    process.env.BETA_MODE = 'false';
+    delete process.env.BETA_END_DATE;
+  });
+
+  it('rejects worker endpoints without valid token', async () => {
+    const missing = await request(app).post('/api/worker/claim').send({});
+    expect(missing.status).toBe(401);
+
+    const invalid = await request(app)
+      .post('/api/worker/complete')
+      .set('X-WORKER-TOKEN', 'wrong-token')
+      .send({ job_id: 'x', result_json: '{}' });
+    expect(invalid.status).toBe(403);
   });
 
   it('DELETE /api/petitions/:id deletes petition', async () => {
