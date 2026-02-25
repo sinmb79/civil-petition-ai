@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Petition {
+  id              String   @id @default(cuid())
+  tenant_id       String
+  raw_text        String?
+  raw_text_masked String
+  pii_detected    Boolean  @default(false)
+  pii_types       String[] @default([])
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  tenant_id     String
+  user_id       String
+  action        String
+  resource_type String
+  resource_id   String
+  metadata      Json
+  created_at    DateTime @default(now())
+}
