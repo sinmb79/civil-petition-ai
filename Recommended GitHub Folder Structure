@@ -1,0 +1,47 @@
+civil-petition-ai/
+│
+├─ docs/
+│   ├─ SPEC.md
+│   ├─ DATA_MODEL.md
+│   ├─ TASKS.md
+│   ├─ ARCHITECTURE.md
+│   └─ API_CONTRACTS.md
+│
+├─ apps/
+│   ├─ web/                  # 프론트엔드 (Next.js)
+│   └─ api/                  # 백엔드 서버 (Next.js API or FastAPI)
+│
+├─ packages/
+│   ├─ core/                 # 공통 타입, 유틸
+│   ├─ legal-engine/         # 법령 검색 및 인용 모듈
+│   ├─ draft-engine/         # 답변서 생성 엔진
+│   ├─ audit-engine/         # 감사 리스크 분석 엔진
+│   ├─ citation-validator/   # 인용 완전성 검증
+│   └─ logger/               # 감사 추적 로그 모듈
+│
+├─ integrations/
+│   ├─ law-api/              # 국가법령정보 API 커넥터
+│   ├─ ordinance-api/        # 자치법규 연계
+│   ├─ precedent-api/        # 판례/행정심판
+│   ├─ budget-api/           # 예산 연계
+│   └─ audit-api/            # 감사 지적 사례 연계
+│
+├─ database/
+│   ├─ schema.prisma (or sql)
+│   ├─ migrations/
+│   └─ seed/
+│
+├─ tests/
+│   ├─ unit/
+│   ├─ integration/
+│   └─ e2e/
+│
+├─ scripts/
+│   ├─ dev.sh
+│   ├─ build.sh
+│   └─ deploy.sh
+│
+├─ .env.example
+├─ package.json
+├─ README.md
+└─ AGENTS.md
