@@ -85,3 +85,18 @@ No hard-coded legal text
 Citation completeness validated
 
 Audit risk deterministic
+
+Phase 6 – Advanced Audit Risk
+T18 – Tenant-Aware Audit Risk Escalation
+
+Add TenantRiskProfile model
+
+Add AuditFindingAggregate model
+
+Apply tenant profile and repeated-pattern escalation in AuditRiskEngine
+
+Add explainability output per rule
+
+Add tests for tenant isolation, repeated-pattern scoring, and level transition
+
+Completion: Tenant-specific weighting and repeated-pattern escalation verified.
