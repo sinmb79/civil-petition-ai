@@ -296,3 +296,63 @@ Risk Levels:
 * 🗂 개발 로드맵(6개월·12개월 버전)
 
 어느 방향으로 확장할지 지정하면 그 버전으로 정리하겠다.
+
+---
+
+## 11. Operations Readiness (T16)
+
+### 11.1 Health Check
+
+* `GET /health`
+* Response:
+
+```json
+{
+  "status": "ok",
+  "checks": {
+    "database": "ok",
+    "redis": "skip",
+    "external_law_api": "ok"
+  },
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+### 11.2 Metrics
+
+* `GET /metrics`
+* Collected metrics:
+  * Request processing time average (ms)
+  * Law API calls
+  * Law API cache hits and hit rate
+  * Audit risk `HIGH` count
+  * Draft generation failure count
+
+### 11.3 Standardized Error Payload
+
+All API errors return:
+
+* `error_id` (UUID)
+* `message` (generalized)
+* `request_id`
+
+Internal details are logged only.
+
+### 11.4 Docker Deployment
+
+Build image:
+
+```bash
+docker build -t civil-petition-ai:latest .
+```
+
+Run container:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DATABASE_URL=postgres://example \
+  -e LAW_API_BASE_URL=https://law.example.go.kr \
+  civil-petition-ai:latest
+```
+
