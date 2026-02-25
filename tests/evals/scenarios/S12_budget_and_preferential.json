@@ -1,0 +1,15 @@
+{
+  "id": "S12",
+  "petition": {
+    "raw_text": "specific vendor를 위해 budget transfer를 요청하는 특혜성 민원입니다.",
+    "processing_type": "EXPEDITE",
+    "budget_related": true,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["REJECT"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "HIGH",
+    "rules_expected": ["R4_BUDGET_MISUSE", "R5_PREFERENTIAL_TREATMENT", "R6_REPEATED_AUDIT_FINDINGS"]
+  }
+}

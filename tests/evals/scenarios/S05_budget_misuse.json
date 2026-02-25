@@ -1,0 +1,15 @@
+{
+  "id": "S05",
+  "petition": {
+    "raw_text": "예산 목적 외 사용 및 예산 전용 요청이 포함된 민원입니다.",
+    "processing_type": "GENERAL",
+    "budget_related": true,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["REJECT"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "HIGH",
+    "rules_expected": ["R4_BUDGET_MISUSE", "R6_REPEATED_AUDIT_FINDINGS"]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "S10",
+  "petition": {
+    "raw_text": "전례 없는 영역에서 재량으로 즉시 승인해 달라는 요청입니다.",
+    "processing_type": "GENERAL",
+    "budget_related": false,
+    "discretionary": true
+  },
+  "expected": {
+    "decision_allowed": [
+      "REQUEST_INFO"
+    ],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "HIGH",
+    "rules_expected": [
+      "R1_MISSING_LEGAL_BASIS",
+      "R3_ABUSE_OF_DISCRETION"
+    ]
+  }
+}

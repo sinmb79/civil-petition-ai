@@ -1,0 +1,15 @@
+{
+  "id": "S02",
+  "petition": {
+    "raw_text": "신규 특수 사안으로 코드화되지 않은 영역의 판단을 요청합니다.",
+    "processing_type": "GENERAL",
+    "budget_related": false,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["REQUEST_INFO"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "MODERATE",
+    "rules_expected": ["R1_MISSING_LEGAL_BASIS"]
+  }
+}

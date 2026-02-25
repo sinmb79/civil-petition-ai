@@ -1,0 +1,38 @@
+[
+  {
+    "id": "LS1",
+    "law_name": "Civil Petition Handling Act",
+    "article": "Article 12",
+    "effective_date": "2024-01-01",
+    "source_link": "https://mock.law/cpha/a12",
+    "keywords": ["신청", "민원", "자료 보완"],
+    "processing_types": ["GENERAL", "EXPEDITE"]
+  },
+  {
+    "id": "LS2",
+    "law_name": "Administrative Procedure Act",
+    "article": "Article 18",
+    "effective_date": "2023-07-01",
+    "source_link": "https://mock.law/apa/a18",
+    "keywords": ["절차", "청문", "사전통지"],
+    "processing_types": ["GENERAL", "EXPEDITE", "TRANSFER"]
+  },
+  {
+    "id": "LS3",
+    "law_name": "Local Finance Act",
+    "article": "Article 42",
+    "effective_date": "2024-03-15",
+    "source_link": "https://mock.law/lfa/a42",
+    "keywords": ["예산", "전용", "목적 외"],
+    "processing_types": ["GENERAL", "EXPEDITE"]
+  },
+  {
+    "id": "LS4",
+    "law_name": "Municipal Transfer Ordinance",
+    "article": "Article 5",
+    "effective_date": "2022-09-01",
+    "source_link": "https://mock.ordinance/transfer/a5",
+    "keywords": ["이송", "관할"],
+    "processing_types": ["TRANSFER"]
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "id": "S03",
+  "petition": {
+    "raw_text": "관할 외 민원이라 이송 처리가 필요합니다.",
+    "processing_type": "TRANSFER",
+    "budget_related": false,
+    "discretionary": false
+  },
+  "expected": {
+    "decision_allowed": ["TRANSFER"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "LOW",
+    "rules_expected": []
+  }
+}

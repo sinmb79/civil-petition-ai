@@ -296,3 +296,22 @@ Risk Levels:
 * 🗂 개발 로드맵(6개월·12개월 버전)
 
 어느 방향으로 확장할지 지정하면 그 버전으로 정리하겠다.
+
+---
+
+## Evaluation (T12)
+
+Scenario-based regression evals are available in `tests/evals/scenarios/*.json`.
+
+Run:
+
+```bash
+pnpm test
+pnpm eval
+```
+
+The eval runner checks:
+
+1. Strict JSON schema conformance
+2. Citation completeness (`law_name`, `article`, `effective_date`, `source_link`)
+3. Deterministic audit risk score/level/rules behavior in stub mode

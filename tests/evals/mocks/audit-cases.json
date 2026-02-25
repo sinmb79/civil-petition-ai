@@ -1,0 +1,17 @@
+[
+  {
+    "id": "AC1",
+    "trigger_keywords": ["절차 생략", "청문 미실시"],
+    "related_rules": ["R2_PROCEDURAL_OMISSION"]
+  },
+  {
+    "id": "AC2",
+    "trigger_keywords": ["목적 외", "예산 전용", "budget transfer"],
+    "related_rules": ["R4_BUDGET_MISUSE"]
+  },
+  {
+    "id": "AC3",
+    "trigger_keywords": ["특혜", "친인척", "specific vendor"],
+    "related_rules": ["R5_PREFERENTIAL_TREATMENT"]
+  }
+]

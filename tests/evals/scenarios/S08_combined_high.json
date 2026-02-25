@@ -1,0 +1,15 @@
+{
+  "id": "S08",
+  "petition": {
+    "raw_text": "절차 생략 후 친인척 업체에 예산 전용을 통해 지원해 달라는 요청입니다.",
+    "processing_type": "EXPEDITE",
+    "budget_related": true,
+    "discretionary": true
+  },
+  "expected": {
+    "decision_allowed": ["REJECT"],
+    "must_include_citation_fields": true,
+    "audit_level_expected": "HIGH",
+    "rules_expected": ["R2_PROCEDURAL_OMISSION", "R3_ABUSE_OF_DISCRETION", "R4_BUDGET_MISUSE", "R5_PREFERENTIAL_TREATMENT", "R6_REPEATED_AUDIT_FINDINGS"]
+  }
+}
