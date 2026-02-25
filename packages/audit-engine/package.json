@@ -1,0 +1,10 @@
+{
+  "name": "@civil-petition/audit-engine",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
