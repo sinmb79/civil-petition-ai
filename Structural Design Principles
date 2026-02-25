@@ -1,0 +1,19 @@
+1️⃣ Engines Must Be Separated
+
+The most important things when working with Codex are:
+
+legal-engine
+
+draft-engine
+
+audit-engine
+
+These three should never be mixed.
+
+Reason:
+
+Ensures test independence
+
+Minimizes the impact of audit logic modifications
+
+Replaceable legal APIs
