@@ -41,7 +41,7 @@ describe('PetitionService', () => {
   it('rejects invalid create payload', async () => {
     const service = new PetitionService(createRepositoryMock());
 
-    await expect(service.create({ raw_text: 'short', processing_type: '' })).rejects.toThrow();
+    expect(() => service.create({ raw_text: 'short', processing_type: '' })).toThrow();
   });
 
   it('reads petition by id', async () => {

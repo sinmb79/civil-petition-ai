@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "pnpm prisma:generate",
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "test": "jest --runInBand",
-    "test:node": "node --test",
+    "test": "pnpm test:jest && pnpm test:node",
+    "test:jest": "jest --runInBand",
+    "test:node": "node --test tests/auditRiskEngine.test.js tests/export.test.js",
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate --schema=database/schema.prisma",
     "prisma:migrate": "prisma migrate deploy --schema=database/schema.prisma",
@@ -32,5 +34,8 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
+  },
+  "prisma": {
+    "schema": "database/schema.prisma"
   }
 }

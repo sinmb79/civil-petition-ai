@@ -16,9 +16,12 @@ describe('Petition routes integration', () => {
   let createdId: string;
 
   beforeAll(async () => {
-    process.env.DATABASE_URL = `file:${dbFile}`;
-    execSync('pnpm prisma:generate:test', { stdio: 'inherit' });
-    execSync('pnpm db:push:test', { stdio: 'inherit' });
+    const databaseUrl = `file:${dbFile}`;
+    process.env.DATABASE_URL = databaseUrl;
+    const commandEnv = { ...process.env, DATABASE_URL: databaseUrl };
+
+    execSync('pnpm prisma:generate:test', { stdio: 'inherit', env: commandEnv });
+    execSync('pnpm db:push:test', { stdio: 'inherit', env: commandEnv });
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { PrismaClient } = require('../../src/generated/prisma-test');
